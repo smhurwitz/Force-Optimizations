@@ -86,7 +86,7 @@ def initial_base_curves(R0, R1, order):
 
 
 def optimization(
-        OUTPUT_DIR="force_opts/initial",
+        OUTPUT_DIR="initial",
         R1 = 0.5,
         order = 5,
         UUID_init_from=None,

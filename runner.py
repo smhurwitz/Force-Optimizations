@@ -8,7 +8,7 @@ def rand(min, max):
     """Generate a random float between min and max."""
     return np.random.rand() * (max - min) + min
 
-def initial_optimizations(N=10000, OUTPUT_DIR="force_opts/initial"):
+def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
     for i in range(N):
         # FIXED PARAMETERS
         ARCLENGTH_WEIGHT        = 0.01
@@ -16,7 +16,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="force_opts/initial"):
         UUID_init_from          = None  # not starting from prev. optimization
 
         # RANDOM PARAMETERS
-        order                   = int(np.round(rand(7, 13))) #normally int(np.round(rand(3, 10)))
+        order                   = int(np.round(rand(7, 16)))
         R1                      = rand(0.3, 0.75)
 
         CURVATURE_THRESHOLD     = rand(5, 12)
