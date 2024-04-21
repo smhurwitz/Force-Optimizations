@@ -1,3 +1,4 @@
 *.sh
 *.pyc
-*.ipynb
+output/*
+vectorizedselffield.ipynb

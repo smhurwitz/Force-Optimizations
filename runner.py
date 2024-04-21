@@ -16,7 +16,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
         UUID_init_from          = None  # not starting from prev. optimization
 
         # RANDOM PARAMETERS
-        order                   = int(np.round(rand(7, 16)))
+        order                   = int(np.round(rand(9, 17)))
         R1                      = rand(0.3, 0.75)
 
         CURVATURE_THRESHOLD     = rand(5, 12)
