@@ -241,4 +241,4 @@ def optimization(
         json.dump(results, outfile, indent=2)
     bs.save(OUT_DIR + f"biot_savart.json")  # save the optimized coil shapes and currents
 
-    return res
+    return res, results, base_coils

@@ -33,7 +33,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
         FORCE_WEIGHT            = 10.0 ** rand(-14, -9)
 
         # RUNNING THE JOBS
-        res = optimization(
+        res, results, coils = optimization(
             OUTPUT_DIR,
             R1,
             order,
@@ -52,6 +52,6 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
             FORCE_WEIGHT,
             ARCLENGTH_WEIGHT)
         
-        print(f"Job {i+1} completed")
+        print(f"Job {i+1} completed with UUID={results['UUID']}")
         
 initial_optimizations()

@@ -15,7 +15,7 @@ from paretoset import paretoset
 # Initialize an empty DataFrame
 df = pd.DataFrame()
 
-results = glob.glob("./output/force_opts/initial/*/results.json")
+results = glob.glob("./output/initial/*/results.json")
 for results_file in results:
     with open(results_file, "r") as f:
         data = json.load(f)
