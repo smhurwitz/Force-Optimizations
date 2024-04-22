@@ -36,7 +36,7 @@ from simsopt.util import in_github_actions
 filename = 'input.LandremanPaul2021_QA'
 
 # Number of iterations to perform:
-MAXITER = 50 if in_github_actions else 400
+MAXITER = 50 if in_github_actions else 14000
 
 # Number of unique coil shapes, i.e. the number of coils per half field period:
 ncoils = 4
