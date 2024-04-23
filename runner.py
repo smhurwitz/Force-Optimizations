@@ -54,4 +54,4 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
-initial_optimizations()
+initial_optimizations(1)

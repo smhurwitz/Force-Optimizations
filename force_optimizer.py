@@ -36,7 +36,7 @@ from simsopt.util import in_github_actions
 filename = 'input.LandremanPaul2021_QA'
 
 # Number of iterations to perform:
-MAXITER = 50 if in_github_actions else 14000
+MAXITER = 50 if in_github_actions else 30000
 
 # Number of unique coil shapes, i.e. the number of coils per half field period:
 ncoils = 4
@@ -186,8 +186,9 @@ def optimization(
 
     # SAVE DATA TO JSON
 
-    BdotN = np.mean(np.abs(np.sum(bs.B().reshape((nphi, ntheta, 3)) * s.unitnormal(), axis=2)))
-    force = [np.max(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
+    BdotN       = np.mean(np.abs(np.sum(bs.B().reshape((nphi, ntheta, 3)) * s.unitnormal(), axis=2)))
+    mean_AbsB   = np.mean(bs.AbsB())
+    force       = [np.max(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
 
     results = {
         "nfp":                      nfp,
@@ -226,6 +227,8 @@ def optimization(
         "arclength_variances":      [float(J.J()) for J in Jals],
         "max_arclength_variance":   max(float(J.J()) for J in Jals),
         "BdotN":                    BdotN,
+        "mean_AbsB":                mean_AbsB,
+        "normalized_BdotN":         BdotN/mean_AbsB,
         "coil_coil_distance":       Jccdist.shortest_distance(),
         "coil_surface_distance":    Jcsdist.shortest_distance(),
         "message":                  res.message,
