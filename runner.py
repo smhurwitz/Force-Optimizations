@@ -14,10 +14,11 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
         ARCLENGTH_WEIGHT        = 0.01
         LENGTH_TARGET           = rand(4.5, 5.0)
         UUID_init_from          = None  # not starting from prev. optimization
+        order                   = 16
 
         # RANDOM PARAMETERS
-        order                   = int(np.round(rand(9, 17)))
-        R1                      = rand(0.3, 0.75)
+        R1                      = rand(0.35, 0.75)
+        ncoils                  = int(np.round(rand(4, 6)))
 
         CURVATURE_THRESHOLD     = rand(5, 12)
         MSC_THRESHOLD           = rand(4,6)
@@ -37,6 +38,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
             OUTPUT_DIR,
             R1,
             order,
+            ncoils,
             UUID_init_from,
             LENGTH_TARGET, 
             LENGTH_WEIGHT,
@@ -54,4 +56,4 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
-initial_optimizations(1)
+initial_optimizations()

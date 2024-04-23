@@ -36,10 +36,7 @@ from simsopt.util import in_github_actions
 filename = 'input.LandremanPaul2021_QA'
 
 # Number of iterations to perform:
-MAXITER = 50 if in_github_actions else 30000
-
-# Number of unique coil shapes, i.e. the number of coils per half field period:
-ncoils = 4
+MAXITER = 50 if in_github_actions else 14000
 
 # Initialize the boundary magnetic surface:
 nphi = 32
@@ -69,7 +66,7 @@ surf_big = SurfaceRZFourier(
 ###############################################################################
 
 
-def initial_base_curves(R0, R1, order):
+def initial_base_curves(R0, R1, order, ncoils):
     return create_equally_spaced_curves(
         ncoils,
         nfp,
@@ -89,6 +86,7 @@ def optimization(
         OUTPUT_DIR="initial",
         R1 = 0.5,
         order = 5,
+        ncoils = 4,
         UUID_init_from=None,
         LENGTH_TARGET=5.00, 
         LENGTH_WEIGHT=1e-03,
@@ -106,7 +104,7 @@ def optimization(
     
     start_time = time.perf_counter()
 
-    if UUID_init_from is None: base_curves = initial_base_curves(R0, R1, order)
+    if UUID_init_from is None: base_curves = initial_base_curves(R0, R1, order, ncoils)
     else: base_curves = None  # TODO: for initializing from previous optimization
     base_currents = [Current(1.0) * (1e5) for i in range(ncoils)]
     base_currents[0].fix_all()  # avoid minimizer setting all currents to zero
