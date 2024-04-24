@@ -18,7 +18,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="initial"):
 
         # RANDOM PARAMETERS
         R1                      = rand(0.35, 0.75)
-        ncoils                  = int(np.round(rand(4, 6)))
+        ncoils                  = int(np.floor(rand(4, 7)))
 
         CURVATURE_THRESHOLD     = rand(5, 12)
         MSC_THRESHOLD           = rand(4,6)

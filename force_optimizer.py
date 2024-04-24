@@ -106,8 +106,19 @@ def optimization(
 
     if UUID_init_from is None: base_curves = initial_base_curves(R0, R1, order, ncoils)
     else: base_curves = None  # TODO: for initializing from previous optimization
-    base_currents = [Current(1.0) * (1e5) for i in range(ncoils)]
-    base_currents[0].fix_all()  # avoid minimizer setting all currents to zero
+
+    total_current = 3e5
+    # Since we know the total sum of currents, we only optimize for ncoils-1
+    # currents, and then pick the last one so that they all add up to the correct
+    # value.
+    base_currents = [Current(total_current / ncoils * 1e-5) * 1e5 for _ in range(ncoils-1)]
+    # Above, the factors of 1e-5 and 1e5 are included so the current
+    # degrees of freedom are O(1) rather than ~ MA.  The optimization
+    # algorithm may not perform well if the dofs are scaled badly.
+    total_current = Current(total_current)
+    total_current.fix_all()
+    base_currents += [total_current - sum(base_currents)]
+
     coils = coils_via_symmetries(base_curves, base_currents, nfp, True)
     base_coils = coils[:ncoils]
     curves = [c.curve for c in coils]
