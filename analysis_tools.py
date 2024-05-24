@@ -3,13 +3,14 @@
 import glob
 import json
 import matplotlib.pyplot as plt
-from numbers import Number
 import numpy as np
 import os
 import pandas as pd
 import plotly.express as px
 import scipy
+import shutil
 import simsopt
+from numbers import Number
 from paretoset import paretoset
 from simsopt.field import (InterpolatedField, 
                            SurfaceClassifier, 
@@ -18,10 +19,10 @@ from simsopt.field import (InterpolatedField,
                            LevelsetStoppingCriterion, 
                            plot_poincare_data)
 from simsopt.geo import SurfaceRZFourier
-from simsopt.util import proc0_print, comm_world
+from simsopt.util import comm_world
 
 
-def get_dfs(inputs="./output/1/data/*/results.json", OUTPUT_DIR='1'):
+def get_dfs(inputs="./output/1/optimizations/*/results.json", OUTPUT_DIR='1'):
     """Returns DataFrames for the raw, filtered, and Pareto data."""
     ### STEP 1: Import raw data
     df = pd.DataFrame()
@@ -61,8 +62,15 @@ def get_dfs(inputs="./output/1/data/*/results.json", OUTPUT_DIR='1'):
     pareto_mask = paretoset(df_filtered[["normalized_BdotN", "max_max_force"]], sense=[min, min])
     df_pareto = df_filtered[pareto_mask]
 
+    # Copy pareto fronts to a separate folder
     if OUTPUT_DIR is not None:
-        np.savetxt(f"./output/{OUTPUT_DIR}/pareto.txt", df_pareto['UUID'].values, fmt='%s')
+        if os.path.exists(f"./output/{OUTPUT_DIR}/pareto/"):
+            shutil.rmtree(f"./output/{OUTPUT_DIR}/pareto/")
+        os.makedirs(f"./output/{OUTPUT_DIR}/pareto/", exist_ok=True)
+        for UUID in df_pareto['UUID']:
+            SOURCE_DIR = glob.glob(f"./**/{UUID}/", recursive=True)[0] 
+            DEST_DIR = f"./output/{OUTPUT_DIR}/pareto/{UUID}/"
+            shutil.copytree(SOURCE_DIR, DEST_DIR)
 
     ### Return statement
     return df, df_filtered, df_pareto
@@ -194,7 +202,6 @@ def poincare(UUID, OUT_DIR='1/poincare', nfieldlines=10, tmax_fl=20000, degree=4
     # Directory for output
     OUT_DIR = f'./output/{OUT_DIR}/{UUID}/'
     print(OUT_DIR)
-    os.makedirs(OUT_DIR, exist_ok=True)
 
     # Load in the boundary surface:
     filename = 'inputs/input.LandremanPaul2021_QA'

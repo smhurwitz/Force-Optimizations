@@ -24,11 +24,10 @@ from simsopt.field.force import coil_force, LpCurveForce
 from simsopt.field.selffield import regularization_circ
 
 
-def continuation(N=10000, dx=0.05, INPUT_FILE="1/pareto.txt", OUTPUT_DIR="2/data"):
+def continuation(N=10000, dx=0.05, INPUT_DIR="1/pareto/", OUTPUT_DIR="2/optimizations"):
     """Performs a continuation method on a set of previous optimizations."""
     # Read in input optimizations
-    UUIDs = np.array(pd.read_table(f"./output/{INPUT_FILE}"))[:,0]
-    results = [glob.glob(f"./**/{UUID}/biot_savart.json", recursive=True)[0] for UUID in UUIDs]
+    results = glob.glob(f"./output/{INPUT_DIR}/*/results.json")
     df = pd.DataFrame()
     for results_file in results:
         with open(results_file, "r") as f:
@@ -51,10 +50,9 @@ def continuation(N=10000, dx=0.05, INPUT_FILE="1/pareto.txt", OUTPUT_DIR="2/data
         UUID_init_from          = init['UUID'].iloc[0]
         ncoils                  = init['ncoils'].iloc[0]
         order                   = init['order'].iloc[0]
+        R1                      = init['R1'].iloc[0]
 
         # RANDOM PARAMETERS
-        R1                      = perturb(init, 'R1')
-
         CURVATURE_THRESHOLD     = perturb(init, 'max_κ_threshold')
         MSC_THRESHOLD           = perturb(init, 'msc_threshold')
         CS_THRESHOLD            = perturb(init, 'cs_threshold')
@@ -88,25 +86,23 @@ def continuation(N=10000, dx=0.05, INPUT_FILE="1/pareto.txt", OUTPUT_DIR="2/data
             CS_WEIGHT,
             FORCE_THRESHOLD,
             FORCE_WEIGHT,
-            ARCLENGTH_WEIGHT)
+            ARCLENGTH_WEIGHT,
+            dx=dx)
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
-    
-    # choose a random UUID, then choose random variations in parameters. 
 
-def initial_optimizations(N=10000, OUTPUT_DIR="1/data"):
+def initial_optimizations(N=10000, OUTPUT_DIR="1/optimizations"):
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
         # FIXED PARAMETERS
         ARCLENGTH_WEIGHT        = 0.01
         UUID_init_from          = None  # not starting from prev. optimization
         order                   = 16
+        ncoils                  = 5
 
         # RANDOM PARAMETERS
         R1                      = rand(0.35, 0.75)
-        ncoils                  = int(np.floor(rand(4, 7)))
-
         CURVATURE_THRESHOLD     = rand(5, 12)
         MSC_THRESHOLD           = rand(4,6)
         CS_THRESHOLD            = rand(0.166, 0.300)
@@ -146,10 +142,10 @@ def initial_optimizations(N=10000, OUTPUT_DIR="1/data"):
 
 
 def optimization(
-        OUTPUT_DIR="1",
+        OUTPUT_DIR="1/optimizations",
         R1 = 0.5,
         order = 5,
-        ncoils = 4,
+        ncoils = 5,
         UUID_init_from=None,
         LENGTH_TARGET=5.00, 
         LENGTH_WEIGHT=1e-03,
@@ -163,7 +159,8 @@ def optimization(
         CS_WEIGHT=1e+03,
         FORCE_THRESHOLD=2e+04,
         FORCE_WEIGHT=1e-10,
-        ARCLENGTH_WEIGHT=1e-2):
+        ARCLENGTH_WEIGHT=1e-2,
+        dx=None):
     """Performs a stage II force optimization based on specified criteria. """
     start_time = time.perf_counter()
 
@@ -171,7 +168,7 @@ def optimization(
     filename = 'inputs/input.LandremanPaul2021_QA'
 
     # Number of iterations to perform:
-    MAXITER = 14000
+    MAXITER = 50 #14000
 
     # Initialize the boundary magnetic surface:
     nphi = 32
@@ -226,9 +223,14 @@ def optimization(
         bs = BiotSavart(coils)
         bs.set_points(s.gamma().reshape((-1, 3)))
     else: 
-        path = glob.glob(f"./**/{UUID}/biot_savart.json", recursive=True)[0]
+        path = glob.glob(f"./**/{UUID_init_from}/biot_savart.json", recursive=True)[0]
         bs = load(path)
-        base_curves = None  # TODO: for initializing from previous optimization
+        coils = bs.coils
+        curves = [c.curve for c in coils]
+        base_coils = coils[:ncoils]
+        base_curves = [base_coils[i].curve for i in range(ncoils)]
+        base_currents = [base_coils[i].current for i in range(ncoils)]
+        bs.set_points(s.gamma().reshape((-1, 3)))
 
     
     ###########################################################################
@@ -306,8 +308,8 @@ def optimization(
 
     results = {
         "nfp":                      nfp,
-        "ncoils":                   ncoils,
-        "order":                    order,
+        "ncoils":                   int(ncoils),
+        "order":                    int(order),
         "nphi":                     nphi,
         "ntheta":                   ntheta,
         "R0":                       R0,  # if initialized from circles, else None
@@ -351,7 +353,8 @@ def optimization(
         "function_evaluations":     res.nfev,
         "coil_currents":            [c.get_value() for c in base_currents],
         "UUID":                     UUID,
-        "eval_time":                time.perf_counter() - start_time
+        "eval_time":                time.perf_counter() - start_time,
+        "dx":                       dx
     }
 
     with open(OUT_DIR + "results.json", "w") as outfile:
