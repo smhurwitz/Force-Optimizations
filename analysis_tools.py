@@ -21,12 +21,12 @@ from simsopt.field import (InterpolatedField,
 from simsopt.geo import SurfaceRZFourier
 from simsopt.util import comm_world
 
-
-def get_dfs(inputs="./output/1/optimizations/*/results.json", OUTPUT_DIR='1'):
+def get_dfs(INPUT_DIR='./output/QA/1/optimizations/', OUTPUT_DIR=None):
     """Returns DataFrames for the raw, filtered, and Pareto data."""
     ### STEP 1: Import raw data
-    df = pd.DataFrame()
+    inputs=f"{INPUT_DIR}*/results.json"
     results = glob.glob(inputs)
+    dfs = []
     for results_file in results:
         with open(results_file, "r") as f:
             data = json.load(f)
@@ -34,9 +34,9 @@ def get_dfs(inputs="./output/1/optimizations/*/results.json", OUTPUT_DIR='1'):
         for key, value in data.items():
             if isinstance(value, list):
                 data[key] = [value]
-        df = pd.concat([df, pd.DataFrame(data)], ignore_index=True)  
-    df = df.query('ncoils==5')
-
+        dfs.append(pd.DataFrame(data))
+    df = pd.concat(dfs, ignore_index=True) 
+    
     ### STEP 2: Filter the data
     margin_up   = 1.05
     margin_low  = 0.95
@@ -64,12 +64,12 @@ def get_dfs(inputs="./output/1/optimizations/*/results.json", OUTPUT_DIR='1'):
 
     # Copy pareto fronts to a separate folder
     if OUTPUT_DIR is not None:
-        if os.path.exists(f"./output/{OUTPUT_DIR}/pareto/"):
-            shutil.rmtree(f"./output/{OUTPUT_DIR}/pareto/")
-        os.makedirs(f"./output/{OUTPUT_DIR}/pareto/", exist_ok=True)
+        if os.path.exists(OUTPUT_DIR):
+            shutil.rmtree(OUTPUT_DIR)
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
         for UUID in df_pareto['UUID']:
             SOURCE_DIR = glob.glob(f"./**/{UUID}/", recursive=True)[0] 
-            DEST_DIR = f"./output/{OUTPUT_DIR}/pareto/{UUID}/"
+            DEST_DIR = f"OUTPUT_DIR{UUID}/"
             shutil.copytree(SOURCE_DIR, DEST_DIR)
 
     ### Return statement
@@ -106,7 +106,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
     return df_correlation.sort_values(by=['R'], ascending=False)
 
 
-def pareto_plt(df, df_filtered, df_pareto):
+def pareto_plt(df, df_filtered, df_pareto, color="coil_surface_distance", color_label="coil-surface distance [m]"):
     """Creates a color-map plot of the Pareto front and filtered points. """
     markersize = 5
     n_pareto = df_pareto.shape[0]
@@ -114,11 +114,11 @@ def pareto_plt(df, df_filtered, df_pareto):
     
     fig = plt.figure(figsize=(6.5, 8))
     plt.rc("font", size=13)
-    norm = plt.Normalize(min(df_filtered['coil_surface_distance']), max(df_filtered['coil_surface_distance']))
+    norm = plt.Normalize(min(df_filtered[color]), max(df_filtered[color]))
     plt.scatter(
         df_filtered["normalized_BdotN"],
         df_filtered["max_max_force"],
-        c=df_filtered["coil_surface_distance"],
+        c=df_filtered[color],
         s=markersize,
         label=f'all optimizations, N={n_filtered}',
         norm=norm
@@ -126,7 +126,7 @@ def pareto_plt(df, df_filtered, df_pareto):
     plt.scatter(
         df_pareto["normalized_BdotN"], 
         df_pareto["max_max_force"], 
-        c=df_pareto["coil_surface_distance"], 
+        c=df_pareto[color], 
         marker="+",
         label=f'Pareto front, N={n_pareto}',
         norm=norm,
@@ -136,7 +136,7 @@ def pareto_plt(df, df_filtered, df_pareto):
     plt.xlim(0.7 * min(df_filtered["normalized_BdotN"]), max(df_filtered["normalized_BdotN"]))
     plt.ylim(8500, 25000)
     plt.xscale("log")
-    plt.colorbar(label="coil-surface distance [m]")
+    plt.colorbar(label=color_label)
     plt.legend(loc='upper right', fontsize='11')
     plt.title('Pareto Front')
     return fig
@@ -195,17 +195,16 @@ def pareto_interactive_plt(df, color='coil_surface_distance'):
     return fig
 
 
-def poincare(UUID, OUT_DIR='1/poincare', nfieldlines=10, tmax_fl=20000, degree=4, 
-            R0_min=1.2125346, R0_max=1.295, interpolate=True, debug=False):
+def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
+             nfieldlines=10, tmax_fl=20000, degree=4, R0_min=1.2125346, 
+             R0_max=1.295, interpolate=True, debug=False):
     """Compute Poincare plots."""
  
     # Directory for output
-    OUT_DIR = f'./output/{OUT_DIR}/{UUID}/'
-    print(OUT_DIR)
+    OUT_DIR = OUT_DIR + UUID + "/"
 
     # Load in the boundary surface:
-    filename = 'inputs/input.LandremanPaul2021_QA'
-    surf = SurfaceRZFourier.from_vmec_input(filename, nphi=200, ntheta=30, range="full torus")
+    surf = SurfaceRZFourier.from_vmec_input(INPUT_FILE, nphi=200, ntheta=30, range="full torus")
     nfp = surf.nfp
 
     # Load in the optimized coils from stage_two_optimization.py:

@@ -24,10 +24,10 @@ from simsopt.field.force import coil_force, LpCurveForce
 from simsopt.field.selffield import regularization_circ
 
 
-def continuation(N=10000, dx=0.05, INPUT_DIR="1/pareto/", OUTPUT_DIR="2/optimizations"):
+def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/1/pareto/", OUTPUT_DIR="./output/QA/1/optimizations"):
     """Performs a continuation method on a set of previous optimizations."""
     # Read in input optimizations
-    results = glob.glob(f"./output/{INPUT_DIR}/*/results.json")
+    results = glob.glob(f"{INPUT_DIR}*/results.json")
     df = pd.DataFrame()
     for results_file in results:
         with open(results_file, "r") as f:
@@ -44,7 +44,7 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="1/pareto/", OUTPUT_DIR="2/optimiza
 
     for i in range(N):
         init = df.sample()
-
+        
         # FIXED PARAMETERS
         ARCLENGTH_WEIGHT        = 0.01
         UUID_init_from          = init['UUID'].iloc[0]
@@ -92,7 +92,7 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="1/pareto/", OUTPUT_DIR="2/optimiza
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
 
-def initial_optimizations(N=10000, OUTPUT_DIR="1/optimizations"):
+def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/1/optimizations/", INPUT_FILE="./inputs/input.LandremanPaul2021_QA"):
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
         # FIXED PARAMETERS
@@ -120,6 +120,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="1/optimizations"):
         # RUNNING THE JOBS
         res, results, coils = optimization(
             OUTPUT_DIR,
+            INPUT_FILE,
             R1,
             order,
             ncoils,
@@ -142,7 +143,8 @@ def initial_optimizations(N=10000, OUTPUT_DIR="1/optimizations"):
 
 
 def optimization(
-        OUTPUT_DIR="1/optimizations",
+        OUTPUT_DIR="./output/QA/1/optimizations/",
+        INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
         R1 = 0.5,
         order = 5,
         ncoils = 5,
@@ -164,16 +166,13 @@ def optimization(
     """Performs a stage II force optimization based on specified criteria. """
     start_time = time.perf_counter()
 
-    # File for the desired boundary magnetic surface:
-    filename = 'inputs/input.LandremanPaul2021_QA'
-
     # Number of iterations to perform:
-    MAXITER = 50 #14000
+    MAXITER = 14000
 
     # Initialize the boundary magnetic surface:
     nphi = 32
     ntheta = 32
-    s = SurfaceRZFourier.from_vmec_input(filename, range="half period", nphi=nphi, ntheta=ntheta)
+    s = SurfaceRZFourier.from_vmec_input(INPUT_FILE, range="half period", nphi=nphi, ntheta=ntheta)
     nfp = s.nfp
     R0 = s.get_rc(0, 0)
 
@@ -275,8 +274,8 @@ def optimization(
     # MAKE DIRECTORY FOR EXPORT
 
     UUID = uuid.uuid4().hex  # unique id for each optimization
-    OUT_DIR = f"./output/{OUTPUT_DIR}/{UUID}/"  # Directory for output
-    os.makedirs(OUT_DIR, exist_ok=True)
+    OUTPUT_DIR = OUTPUT_DIR + UUID + "/"  # Directory for output
+    os.makedirs(OUTPUT_DIR + UUID, exist_ok=True)
 
 
     # EXPORT VTKS
@@ -287,7 +286,7 @@ def optimization(
         force = np.append(force, force[0])
         forces = np.concatenate([forces, force])
     pointData_forces = {"F": forces}
-    curves_to_vtk(curves, OUT_DIR + "curves_opt", close=True, extra_data=pointData_forces)
+    curves_to_vtk(curves, OUTPUT_DIR + "curves_opt", close=True, extra_data=pointData_forces)
 
     bs_big = BiotSavart(coils)
     bs_big.set_points(surf_big.gamma().reshape((-1, 3)))
@@ -297,7 +296,7 @@ def optimization(
             axis=2,
         )[:, :, None]
     }
-    surf_big.to_vtk(OUT_DIR + "surf_opt", extra_data=pointData)
+    surf_big.to_vtk(OUTPUT_DIR + "surf_opt", extra_data=pointData)
 
 
     # SAVE DATA TO JSON
@@ -357,9 +356,9 @@ def optimization(
         "dx":                       dx
     }
 
-    with open(OUT_DIR + "results.json", "w") as outfile:
-        json.dump(results, outfile, indent=2)
-    bs.save(OUT_DIR + f"biot_savart.json")  # save the optimized coil shapes and currents
+    with open(OUTPUT_DIR + "results.json", "w") as outfile:
+        json.dump(results , outfile, indent=2)
+    bs.save(OUTPUT_DIR + f"biot_savart.json")  # save the optimized coil shapes and currents
 
     return res, results, base_coils
     
