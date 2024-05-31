@@ -21,6 +21,8 @@ from simsopt.field import (InterpolatedField,
 from simsopt.geo import SurfaceRZFourier
 from simsopt.util import comm_world
 
+
+### DATA ANALYSIS #############################################################
 def get_dfs(INPUT_DIR='./output/QA/1/optimizations/', OUTPUT_DIR=None):
     """Returns DataFrames for the raw, filtered, and Pareto data."""
     ### STEP 1: Import raw data
@@ -69,7 +71,7 @@ def get_dfs(INPUT_DIR='./output/QA/1/optimizations/', OUTPUT_DIR=None):
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         for UUID in df_pareto['UUID']:
             SOURCE_DIR = glob.glob(f"./**/{UUID}/", recursive=True)[0] 
-            DEST_DIR = f"OUTPUT_DIR{UUID}/"
+            DEST_DIR = f"{OUTPUT_DIR}{UUID}/"
             shutil.copytree(SOURCE_DIR, DEST_DIR)
 
     ### Return statement
@@ -106,95 +108,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
     return df_correlation.sort_values(by=['R'], ascending=False)
 
 
-def pareto_plt(df, df_filtered, df_pareto, color="coil_surface_distance", color_label="coil-surface distance [m]"):
-    """Creates a color-map plot of the Pareto front and filtered points. """
-    markersize = 5
-    n_pareto = df_pareto.shape[0]
-    n_filtered = df_filtered.shape[0] - n_pareto
-    
-    fig = plt.figure(figsize=(6.5, 8))
-    plt.rc("font", size=13)
-    norm = plt.Normalize(min(df_filtered[color]), max(df_filtered[color]))
-    plt.scatter(
-        df_filtered["normalized_BdotN"],
-        df_filtered["max_max_force"],
-        c=df_filtered[color],
-        s=markersize,
-        label=f'all optimizations, N={n_filtered}',
-        norm=norm
-    )
-    plt.scatter(
-        df_pareto["normalized_BdotN"], 
-        df_pareto["max_max_force"], 
-        c=df_pareto[color], 
-        marker="+",
-        label=f'Pareto front, N={n_pareto}',
-        norm=norm,
-    )
-    plt.xlabel(r'$\langle|\mathbf{B}\cdot\mathbf{n}|\rangle/\langle B \rangle$ [unitless]')
-    plt.ylabel("max force [N/m]")
-    plt.xlim(0.7 * min(df_filtered["normalized_BdotN"]), max(df_filtered["normalized_BdotN"]))
-    plt.ylim(8500, 25000)
-    plt.xscale("log")
-    plt.colorbar(label=color_label)
-    plt.legend(loc='upper right', fontsize='11')
-    plt.title('Pareto Front')
-    return fig
-
-
-def pareto_interactive_plt(df, color='coil_surface_distance'):
-    """Creates an interactive plot of the Pareto front."""
-    fig = px.scatter(
-        df, 
-        x="normalized_BdotN", 
-        y="max_max_force", 
-        color=color,
-        log_x=True,
-        width=500, 
-        height=400,
-        title="Initial Force Optimizations",
-        hover_data={
-            'UUID':True,
-            'max_max_force':':.2e',
-            'coil_surface_distance':':.2f',
-            'coil_coil_distance':':.3f',
-            'length_target':':.2f',
-            'force_threshold':':.2e',
-            'cc_threshold':':.2e',
-            'cs_threshold':':.2e',
-            'length_weight':':.2e',
-            'msc_weight':':.2e',
-            'cc_weight':':.2e',
-            'cs_weight':':.2e',
-            'force_weight':':.2e',
-            'normalized_BdotN':':.2e',
-            'max_MSC':':.2e',
-            'max_max_κ':':.2e'
-            }
-        )
-
-    fig.update_layout(
-        margin=dict(l=20, r=20, t=40, b=20),
-        plot_bgcolor='white'
-    )
-    fig.update_xaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        tickformat='.1e',
-        dtick=0.25
-    )
-    fig.update_yaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        tickformat = "000"
-    )
-    return fig
-
-
+### PHYSICS ANALYSIS ##########################################################
 def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
              nfieldlines=10, tmax_fl=20000, degree=4, R0_min=1.2125346, 
              R0_max=1.295, interpolate=True, debug=False):
@@ -251,6 +165,60 @@ def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input
     bs.set_points(surf.gamma().reshape((-1, 3)))
     image = trace_fieldlines(bsh, 'bsh') if(interpolate) else trace_fieldlines(bs, 'bs')
     return image
+
+
+### PLOTTING ##################################################################
+def pareto_interactive_plt(df, color='coil_surface_distance'):
+    """Creates an interactive plot of the Pareto front."""
+    fig = px.scatter(
+        df, 
+        x="normalized_BdotN", 
+        y="max_max_force", 
+        color=color,
+        log_x=True,
+        width=500, 
+        height=400,
+        title="Initial Force Optimizations",
+        hover_data={
+            'UUID':True,
+            'max_max_force':':.2e',
+            'coil_surface_distance':':.2f',
+            'coil_coil_distance':':.3f',
+            'length_target':':.2f',
+            'force_threshold':':.2e',
+            'cc_threshold':':.2e',
+            'cs_threshold':':.2e',
+            'length_weight':':.2e',
+            'msc_weight':':.2e',
+            'cc_weight':':.2e',
+            'cs_weight':':.2e',
+            'force_weight':':.2e',
+            'normalized_BdotN':':.2e',
+            'max_MSC':':.2e',
+            'max_max_κ':':.2e'
+            }
+        )
+
+    fig.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        plot_bgcolor='white'
+    )
+    fig.update_xaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        tickformat='.1e',
+        dtick=0.25
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        tickformat = "000"
+    )
+    return fig
 
 
 def success_plt(df, df_filtered):
