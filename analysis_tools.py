@@ -10,15 +10,21 @@ import plotly.express as px
 import scipy
 import shutil
 import simsopt
+from matplotlib import colors
+from mayavi import mlab
 from numbers import Number
 from paretoset import paretoset
+from simsopt._core.optimizable import load
 from simsopt.field import (InterpolatedField, 
                            SurfaceClassifier, 
                            particles_to_vtk,
                            compute_fieldlines, 
                            LevelsetStoppingCriterion, 
-                           plot_poincare_data)
-from simsopt.geo import SurfaceRZFourier
+                           plot_poincare_data,
+                           BiotSavart)
+from simsopt.field.force import coil_force, LpCurveForce, self_force
+from simsopt.field.selffield import regularization_circ
+from simsopt.geo import SurfaceRZFourier, plot
 from simsopt.util import comm_world
 
 
@@ -108,7 +114,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
     return df_correlation.sort_values(by=['R'], ascending=False)
 
 
-### PHYSICS ANALYSIS ##########################################################
+### PHYSICS STUFF #############################################################
 def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
              nfieldlines=10, tmax_fl=20000, degree=4, R0_min=1.2125346, 
              R0_max=1.295, interpolate=True, debug=False):
@@ -167,6 +173,36 @@ def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input
     return image
 
 
+def qfm(UUID):
+    """Generated quadratic flux minimizing surfaces, largely copied from
+    https://github.com/hiddenSymmetries/simsopt/blob/master/examples/1_Simple/qfm.py"""
+
+    path = glob.glob("./**/" + UUID + "/biot_savart.json", recursive=True)[0]
+    with open(path, "r") as f:
+        data = json.load(f)
+        # Wrap lists in another list
+        for key, value in data.items():
+            if isinstance(value, list):
+                data[key] = [value]
+        df = pd.DataFrame(data)
+    nfp = df["nfp"]
+    
+    path = glob.glob("./**/" + UUID + "/biot_savart.json", recursive=True)[0]
+    bs = load(path)
+
+    mpol = 5 # Maximum poloidal mode number included.
+    ntor = 5 # Maximum toroidal mode number included, divided by nfp.
+    stellsym = True
+    constraint_weight = 1e0  
+
+    phis = np.linspace(0, 1/nfp, 25, endpoint=False)
+    thetas = np.linspace(0, 1, 25, endpoint=False)
+    s = SurfaceRZFourier(
+        mpol=mpol, ntor=ntor, stellsym=stellsym, nfp=nfp, quadpoints_phi=phis,
+        quadpoints_theta=thetas)
+    s.fit_to_curve(ma, 0.2, flip_theta=True)
+
+
 ### PLOTTING ##################################################################
 def pareto_interactive_plt(df, color='coil_surface_distance'):
     """Creates an interactive plot of the Pareto front."""
@@ -221,6 +257,74 @@ def pareto_interactive_plt(df, color='coil_surface_distance'):
     return fig
 
 
+def plot_coils(UUID, surf_file=None, surf_color="white", coil_color="force", 
+               arrow=None, select_coil=None):    
+    fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0), size=(1200,1200))
+    
+    path = glob.glob("./**/" + UUID + "/biot_savart.json", recursive=True)[0]
+    bs = load(path)
+    coils = bs.coils
+    
+    i=0
+    for c in coils:
+        def close(data): return np.concatenate((data, [data[0]]))
+        gamma = c.curve.gamma()
+        x = close(gamma[:, 0])
+        y = close(gamma[:, 1])
+        z = close(gamma[:, 2])
+
+        tube_radius = 0.015
+        if coil_color == "force":
+            force = np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)
+            force = np.append(force, force[0])
+            mlab.plot3d(x, y, z, force, tube_radius=tube_radius)
+        else:
+            mlab.plot3d(x, y, z, tube_radius=tube_radius)  
+        
+        
+        if arrow is not None and (select_coil is not None and select_coil==i):
+            def skip(data, npts=50): return data[::round(len(data) / npts)]
+        
+            if arrow == "force":
+                f = coil_force(c, coils, regularization_circ(0.05))
+            elif arrow == "mutual":
+                gammadash = c.curve.gammadash()
+                gammadash_norm = np.linalg.norm(gammadash, axis=1)[:, None]
+                tangent = gammadash / gammadash_norm
+                mutual_coils = [coil for coil in coils if coil is not c]
+                mutual_field = BiotSavart(mutual_coils).set_points(c.curve.gamma()).B()
+                mutualforce = np.cross(c.current.get_value() * tangent, mutual_field)
+                f = mutualforce
+            elif arrow == "self":
+                f = self_force(c, regularization_circ(0.05))
+            else:
+                f=None
+
+            u = skip(f[:,0])
+            v = skip(f[:,1])
+            w = skip(f[:,2])
+            x = skip(gamma[:, 0])
+            y = skip(gamma[:, 1])
+            z = skip(gamma[:, 2])
+            mlab.quiver3d(x,y,z,u,v,w, line_width=2.0, scale_mode="none",scale_factor=0.125)  
+        
+        i += 1  
+
+
+    if surf_file is not None:
+        s = SurfaceRZFourier.from_vmec_input(surf_file, range="full torus", nphi=32, ntheta=32)
+        gamma = s.gamma()
+        gamma = np.concatenate((gamma, gamma[:, :1, :]), axis=1)
+        gamma = np.concatenate((gamma, gamma[:1, :, :]), axis=0)
+
+        rgb = colors.to_rgba(surf_color)[0:3]
+        mlab.mesh(gamma[:, :, 0], gamma[:, :, 1], gamma[:, :, 2], color=rgb)
+
+
+    mlab.colorbar(orientation="vertical", title="Force [N/m]")
+    return fig
+
+    
 def success_plt(df, df_filtered):
     fig = plt.figure(1, figsize=(14.5, 11))
     nrows = 5
