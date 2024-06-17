@@ -76,7 +76,7 @@ def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', INPUT_FILE="./inputs/input
     return image
 
 
-def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", mpol=5, ntor=5):
+def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA"):
     """Generated quadratic flux minimizing surfaces, adapted from
     https://github.com/hiddenSymmetries/simsopt/blob/master/examples/1_Simple/qfm.py"""
 
@@ -89,7 +89,7 @@ def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", mpol=5, ntor=5):
     qfm = QfmResidual(s, bs)
     qfm.J()
     vol = Volume(s)
-    vol_target = vol.J()
+    vol_target = 0.8 * vol.J()
     qfm_surface = QfmSurface(bs, s, vol, vol_target)
 
     constraint_weight = 1e0  
@@ -97,6 +97,7 @@ def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", mpol=5, ntor=5):
                                                             constraint_weight=constraint_weight)
     vol_err = abs((s.volume()-vol_target)/vol_target)
     residual = np.linalg.norm(qfm.J())
+    print(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
     return qfm_surface.surface, vol_err, residual
 
 
@@ -145,14 +146,12 @@ def surf_to_desc(simsopt_surf, LMN=8):
         NFP=nfp,
         Psi=np.pi * simsopt_surf.minor_radius()**2,
         ensure_nested=False,
-        current=PowerSeriesProfile(),
-        pressure=PowerSeriesProfile(),
     )
 
     # Check that the desc surface matches the input surface.
     # Grid resolution for testing the surfaces match:
-    ntheta = 50
-    nphi = 39
+    ntheta = len(simsopt_surf.quadpoints_theta)
+    nphi = len(simsopt_surf.quadpoints_phi)
     simsopt_surf2 = SurfaceRZFourier(
         mpol=simsopt_surf.mpol,
         ntor=simsopt_surf.ntor,
@@ -174,7 +173,6 @@ def surf_to_desc(simsopt_surf, LMN=8):
 
     def compare_simsopt_desc(simsopt_data, desc_data):
         desc_arr = desc_data.reshape((ntheta, nphi), order="F")
-        # Flip direction of theta:
         desc_arr = np.vstack((desc_arr[:1, :], np.flipud(desc_arr[1:, :])))
         np.testing.assert_allclose(simsopt_data, desc_arr, atol=1e-14)
 
@@ -184,3 +182,5 @@ def surf_to_desc(simsopt_surf, LMN=8):
 
     # If tests are passed:
     return eq
+
+
