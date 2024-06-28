@@ -1,3 +1,4 @@
+import desc
 import glob
 import json
 import matplotlib.pyplot as plt
@@ -11,6 +12,7 @@ import simsopt
 from desc.grid import LinearGrid
 from desc.geometry import FourierRZToroidalSurface
 from desc.equilibrium import Equilibrium
+from desc.plotting import plot_boozer_surface
 from desc.vmec_utils import ptolemy_identity_fwd
 from matplotlib import colors
 from mayavi import mlab
@@ -385,7 +387,7 @@ def poincare(UUID, OUT_DIR='./output/QA/1/poincare/',
     return image
 
 
-def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=0.5):
+def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=0.95):
     """Generated quadratic flux minimizing surfaces, adapted from
     https://github.com/hiddenSymmetries/simsopt/blob/master/examples/1_Simple/qfm.py"""
 
@@ -490,6 +492,8 @@ def surf_to_desc(simsopt_surf, LMN=8):
     compare_simsopt_desc(gamma[:, :, 2].T, data["Z"])
 
     # If tests are passed:
+    # eq.solve()
+    desc.continuation.solve_continuation_automatic(eq)
     return eq
 
 
@@ -514,8 +518,6 @@ def check_poincare_and_qfm(UUID="6266c8d4bb25499b899d86e9e3dd2ee2", phi=0.1,
     # show poincaré plots
     poincare(UUID, INPUT_FILE=INPUT_FILE, nfieldlines=10, tmax_fl=20000, 
         degree=4, phis=[phi])
-    # poincare(UUID, INPUT_FILE=INPUT_FILE, nfieldlines=3, tmax_fl=4000, 
-    #     degree=4, phis=[phi])
     
     # show target LCFS
     LCFS = SurfaceRZFourier.from_vmec_input(INPUT_FILE, range="full torus", nphi=32, ntheta=32)
