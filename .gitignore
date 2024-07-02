@@ -2,4 +2,4 @@
 *.pyc
 output/*
 vectorizedselffield.ipynb
-test.py
+test*

@@ -1,7 +1,9 @@
 import desc
 import glob
+import imageio
 import json
 import matplotlib.pyplot as plt
+import moviepy.editor as mp
 import numpy as np
 import os
 import pandas as pd
@@ -126,6 +128,13 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
 # II) PLOTTING
 ###############################################################################
 
+def create_movies(images, OUT_NAME, OUT_PATH):
+    writer = imageio.get_writer(OUT_PATH + OUT_NAME + ".mp4")
+    for image in images:
+        writer.append_data(image)
+    writer.close()
+    imageio.mimsave(OUT_PATH + OUT_NAME + ".gif", images, loop=0)
+
 def pareto_interactive_plt(df, color='coil_surface_distance'):
     """Creates an interactive plot of the Pareto front."""
     fig = px.scatter(
@@ -179,14 +188,14 @@ def pareto_interactive_plt(df, color='coil_surface_distance'):
     return fig
 
 
-def plot_coils(BS_PATH, surf_file=None, surf_color="white", coil_color="force", 
-               arrow=None, select_coil=None, size=(1200,1200), crange=(0,15000)):    
-    fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0), size=size)
+def plot_coils(BS_PATH, fig=None, surf_file=None, surf_color="white", coil_color="force", 
+               arrow=None, select_coil=None, size=(1200,1200), crange=(0,15000)):   
+    if fig is None: 
+        fig = mlab.figure(bgcolor=(1,1,1), fgcolor=(0,0,0), size=size)
+        mlab.options.offscreen = True
     fig.scene.disable_render = True
-
     bs = load(BS_PATH) #path to biotsavart.json
     coils = bs.coils
-
     vmin = crange[0]
     vmax = crange[1]
 
@@ -205,7 +214,7 @@ def plot_coils(BS_PATH, surf_file=None, surf_color="white", coil_color="force",
             return self_force(c, regularization_circ(0.05))
         else:
             return None
-    
+
     for c in coils:
         def close(data): return np.concatenate((data, [data[0]]))
         gamma = c.curve.gamma()
@@ -240,7 +249,6 @@ def plot_coils(BS_PATH, surf_file=None, surf_color="white", coil_color="force",
             obj.glyph.color_mode = 'color_by_scalar'
         i += 1          
 
-
     if surf_file is not None:
         s = SurfaceRZFourier.from_vmec_input(surf_file, range="full torus", nphi=32, ntheta=32)
         gamma = s.gamma()
@@ -249,7 +257,6 @@ def plot_coils(BS_PATH, surf_file=None, surf_color="white", coil_color="force",
 
         rgb = colors.to_rgba(surf_color)[0:3]
         mlab.mesh(gamma[:, :, 0], gamma[:, :, 1], gamma[:, :, 2], color=rgb)
-
 
     mlab.colorbar(orientation="vertical", title="Force [N/m]")
     mlab.axes(x_axis_visibility=False, y_axis_visibility=False, z_axis_visibility=False)
@@ -387,7 +394,7 @@ def poincare(UUID, OUT_DIR='./output/QA/1/poincare/',
     return image
 
 
-def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=0.95):
+def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=1.00):
     """Generated quadratic flux minimizing surfaces, adapted from
     https://github.com/hiddenSymmetries/simsopt/blob/master/examples/1_Simple/qfm.py"""
 
@@ -493,7 +500,7 @@ def surf_to_desc(simsopt_surf, LMN=8):
 
     # If tests are passed:
     # eq.solve()
-    desc.continuation.solve_continuation_automatic(eq)
+    desc.continuation.solve_continuation_automatic(eq, verbose=0)
     return eq
 
 
@@ -522,12 +529,12 @@ def check_poincare_and_qfm(UUID="6266c8d4bb25499b899d86e9e3dd2ee2", phi=0.1,
     # show target LCFS
     LCFS = SurfaceRZFourier.from_vmec_input(INPUT_FILE, range="full torus", nphi=32, ntheta=32)
     r, z = get_crosssection(LCFS)
-    plt.plot(r, z, linewidth=2, c='k', label="target LCFS")
+    plt.plot(r, z, linewidth=2, c='r', label="target LCFS")
 
     # show QFMs at various radial distances
-    N=3
+    N=2
     for i in range(N):
-        vol_frac = 0.95 - 0.4 * i / (N - 1 + 1e-100)
+        vol_frac = 1.0 - 0.02 * i / (N - 1 + 1e-100)
         qfm_surf, _, _ = qfm(UUID, INPUT_FILE=INPUT_FILE, vol_frac=vol_frac)
         r, z = get_crosssection(qfm_surf)
         if i != N - 1:
