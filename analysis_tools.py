@@ -3,7 +3,6 @@ import glob
 import imageio
 import json
 import matplotlib.pyplot as plt
-import moviepy.editor as mp
 import numpy as np
 import os
 import pandas as pd
@@ -11,6 +10,7 @@ import plotly.express as px
 import scipy
 import shutil
 import simsopt
+import subprocess
 from desc.grid import LinearGrid
 from desc.geometry import FourierRZToroidalSurface
 from desc.equilibrium import Equilibrium
@@ -145,7 +145,6 @@ def pareto_interactive_plt(df, color='coil_surface_distance'):
         log_x=True,
         width=500, 
         height=400,
-        title="Initial Force Optimizations",
         hover_data={
             'UUID':True,
             'max_max_force':':.2e',
@@ -263,6 +262,27 @@ def plot_coils(BS_PATH, fig=None, surf_file=None, surf_color="white", coil_color
     fig.scene.camera.zoom(1.65)
     fig.scene.disable_render = False
     return mlab.screenshot()
+
+
+def plot_losses(INPUT_PATH, s=0.3):
+    # INPUT_PATH points to "confined_fraction.dat"
+
+    with open(INPUT_PATH, "r") as f: ar = np.loadtxt(f)
+
+    time             = ar[:, 0]
+    confined_passing = ar[:, 1]
+    confined_trapped = ar[:, 2]
+    number           = ar[:, 3]
+    confined_total   = confined_passing + confined_trapped
+    loss_frac        = 1 - confined_total
+
+    fig = plt.figure()
+    plt.plot(time, loss_frac)
+    plt.title(f"Collisionless particle losses, s={s}, N={int(number[0])}")
+    plt.xscale('log')
+    plt.xlabel("time [s]")
+    plt.ylabel("loss fraction")
+    return fig
 
     
 def success_plt(df, df_filtered):
@@ -417,6 +437,40 @@ def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=1.00):
     residual = np.linalg.norm(qfm.J())
     # print(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
     return qfm_surface.surface, vol_err, residual
+
+
+def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_scaled.nc", 
+               SIMPLE_DIR="/Users/sienahurwitz/Documents/Physics/Codes/SIMPLE/build/",
+               suppress_output=False):
+
+    # STEP 1: generate the input files and save to simple build dir
+    with open(SIMPLE_DIR + "simple.in", "w") as f: 
+        f.write(f"&config\n")
+        f.write(f"trace_time = {trace_time}d0\n")
+        f.write(f"sbeg = {s}d0\n")
+        f.write(f"ntestpart = {n_test_part}\n")
+        f.write(f"netcdffile = '{vmec_name}'\n")
+        f.write(f"/\n")
+
+    # STEP 2: move the vmec equil to the build dir
+    SOURCE = glob.glob(f"./**/{UUID}/eq_scaled.nc", recursive=True)[0]
+    DEST = SIMPLE_DIR + "eq_scaled.nc"
+    shutil.copy(SOURCE, DEST)
+
+    # STEP 3: run SIMPLE   
+    command = f"cd {SIMPLE_DIR} && ./simple.x"
+    print(command)
+    if suppress_output:
+        subprocess.run(command, shell=True, check=True, stdout=subprocess.DEVNULL) 
+    else: 
+        subprocess.run(command, shell=True, check=True)
+
+    # STEP 4: move inputs and outputs to UUID's folder
+    DEST = glob.glob(f"./**/{UUID}/", recursive=True)[0]
+    files = ["simple.in", "times_lost.dat", vmec_name]
+    for file in files:
+        os.remove(SIMPLE_DIR + file) 
+    shutil.move(SIMPLE_DIR + "confined_fraction.dat", DEST +f"confined_fraction_s={s:.0E}.dat")  
 
 
 def surf_to_desc(simsopt_surf, LMN=8):
