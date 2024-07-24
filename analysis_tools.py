@@ -38,7 +38,7 @@ from simsopt.util import comm_world
 # I) DATA ANALYSIS
 ###############################################################################
 
-def get_dfs(INPUT_DIR='./output/QA/1/optimizations/', OUTPUT_DIR=None):
+def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_DIR=None):
     """Returns DataFrames for the raw, filtered, and Pareto data."""
     ### STEP 1: Import raw data
     inputs=f"{INPUT_DIR}*/results.json"
@@ -346,7 +346,7 @@ def success_plt(df, df_filtered):
 # III) PHYSICS STUFF
 ###############################################################################
 
-def poincare(UUID, OUT_DIR='./output/QA/1/poincare/', 
+def poincare(UUID, OUT_DIR='./output/QA/with-force-penalty/1/poincare/', 
              INPUT_FILE="./inputs/input.LandremanPaul2021_QA", phis=[0.0],
              nfieldlines=10, tmax_fl=20000, degree=4, R0_min=1.2125346, 
              R0_max=1.295, interpolate=True, debug=False):

@@ -24,7 +24,8 @@ from simsopt.field.force import coil_force, LpCurveForce
 from simsopt.field.selffield import regularization_circ
 
 
-def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/1/pareto/", OUTPUT_DIR="./output/QA/1/optimizations"):
+def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/pareto/", 
+                 OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations"):
     """Performs a continuation method on a set of previous optimizations."""
     # Read in input optimizations
     results = glob.glob(f"{INPUT_DIR}*/results.json")
@@ -92,7 +93,9 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/1/pareto/", OUTPUT_DIR
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
 
-def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/1/optimizations/", INPUT_FILE="./inputs/input.LandremanPaul2021_QA"):
+def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/", 
+                          INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
+                          with_force=True):
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
         # FIXED PARAMETERS
@@ -115,7 +118,11 @@ def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/1/optimizations/", IN
         MSC_WEIGHT              = 10.0 ** rand(-7, -3)
         CS_WEIGHT               = 10.0 ** rand(-1, 4)
         CC_WEIGHT               = 10.0 ** rand(2, 5)
-        FORCE_WEIGHT            = 10.0 ** rand(-14, -9)
+
+        if with_force:
+            FORCE_WEIGHT        = 10.0 ** rand(-14, -9)
+        else:
+            FORCE_WEIGHT        = 0
 
         # RUNNING THE JOBS
         res, results, coils = optimization(
@@ -143,7 +150,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/1/optimizations/", IN
 
 
 def optimization(
-        OUTPUT_DIR="./output/QA/1/optimizations/",
+        OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/",
         INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
         R1 = 0.5,
         order = 5,
