@@ -470,7 +470,8 @@ def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_sca
     files = ["simple.in", "times_lost.dat", vmec_name]
     for file in files:
         os.remove(SIMPLE_DIR + file) 
-    shutil.move(SIMPLE_DIR + "confined_fraction.dat", DEST +f"confined_fraction_s={s:.0E}.dat")  
+    shutil.move(SIMPLE_DIR + "confined_fraction.dat", 
+                DEST +f"confined_fraction_s={s:.1E}.dat")  
 
 
 def surf_to_desc(simsopt_surf, LMN=8):

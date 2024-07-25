@@ -95,7 +95,7 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/p
 
 def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/", 
                           INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
-                          with_force=True):
+                          with_force=True, MAXITER=14000):
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
         # FIXED PARAMETERS
@@ -144,7 +144,8 @@ def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/
             CS_WEIGHT,
             FORCE_THRESHOLD,
             FORCE_WEIGHT,
-            ARCLENGTH_WEIGHT)
+            ARCLENGTH_WEIGHT,
+            MAXITER)
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
 
@@ -169,12 +170,10 @@ def optimization(
         FORCE_THRESHOLD=2e+04,
         FORCE_WEIGHT=1e-10,
         ARCLENGTH_WEIGHT=1e-2,
-        dx=None):
+        dx=None,
+        MAXITER=14000):
     """Performs a stage II force optimization based on specified criteria. """
     start_time = time.perf_counter()
-
-    # Number of iterations to perform:
-    MAXITER = 14000
 
     # Initialize the boundary magnetic surface:
     nphi = 32
