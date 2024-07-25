@@ -25,7 +25,9 @@ from simsopt.field.selffield import regularization_circ
 
 
 def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/pareto/", 
-                 OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations"):
+                 OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations",
+                 INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
+                 MAXITER=14000):
     """Performs a continuation method on a set of previous optimizations."""
     # Read in input optimizations
     results = glob.glob(f"{INPUT_DIR}*/results.json")
@@ -71,6 +73,7 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/p
         # RUNNING THE JOBS
         res, results, coils = optimization(
             OUTPUT_DIR,
+            INPUT_FILE,
             R1,
             order,
             ncoils,
@@ -88,7 +91,8 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/p
             FORCE_THRESHOLD,
             FORCE_WEIGHT,
             ARCLENGTH_WEIGHT,
-            dx=dx)
+            dx=dx,
+            MAXITER=MAXITER)
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
         
@@ -98,6 +102,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/
                           with_force=True, MAXITER=14000):
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
+        print(INPUT_FILE)
         # FIXED PARAMETERS
         ARCLENGTH_WEIGHT        = 0.01
         UUID_init_from          = None  # not starting from prev. optimization
@@ -145,7 +150,7 @@ def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/
             FORCE_THRESHOLD,
             FORCE_WEIGHT,
             ARCLENGTH_WEIGHT,
-            MAXITER)
+            MAXITER=MAXITER)
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
 
