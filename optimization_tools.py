@@ -25,7 +25,7 @@ from simsopt.field.selffield import regularization_circ
 
 
 def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/pareto/", 
-                 OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations",
+                 OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations/",
                  INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
                  MAXITER=14000):
     """Performs a continuation method on a set of previous optimizations."""
@@ -286,7 +286,7 @@ def optimization(
 
     UUID = uuid.uuid4().hex  # unique id for each optimization
     OUTPUT_DIR = OUTPUT_DIR + UUID + "/"  # Directory for output
-    os.makedirs(OUTPUT_DIR + UUID, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
     # EXPORT VTKS
