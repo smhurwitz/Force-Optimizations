@@ -95,14 +95,72 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/p
             MAXITER=MAXITER)
         
         print(f"Job {i+1} completed with UUID={results['UUID']}")
-        
+            
 
-def initial_optimizations(N=10000, OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/", 
-                          INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
-                          with_force=True, MAXITER=14000):
+def initial_optimizations_QA(N=10000, with_force=True, MAXITER=14000,
+                             OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/"):
+    INPUT_FILE="./inputs/input.LandremanPaul2021_QA"
+    
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
-        print(INPUT_FILE)
+        # FIXED PARAMETERS
+        ARCLENGTH_WEIGHT        = 0.01
+        UUID_init_from          = None  # not starting from prev. optimization
+        order                   = 16
+        ncoils                  = 5
+
+        # RANDOM PARAMETERS
+        R1                      = rand(0.35, 0.75)
+        CURVATURE_THRESHOLD     = rand(5, 12)
+        MSC_THRESHOLD           = rand(4,6)
+        CS_THRESHOLD            = rand(0.166, 0.300)
+        CC_THRESHOLD            = rand(0.083, 0.120)
+        FORCE_THRESHOLD         = rand(0, 5e+04)
+        LENGTH_TARGET           = rand(4.9,5.0)
+
+        LENGTH_WEIGHT           = 10.0 ** rand(-4, -2)
+        CURVATURE_WEIGHT        = 10.0 ** rand(-9, -5)
+        MSC_WEIGHT              = 10.0 ** rand(-7, -3)
+        CS_WEIGHT               = 10.0 ** rand(-1, 4)
+        CC_WEIGHT               = 10.0 ** rand(2, 5)
+
+        if with_force:
+            FORCE_WEIGHT        = 10.0 ** rand(-14, -9)
+        else:
+            FORCE_WEIGHT        = 0
+
+        # RUNNING THE JOBS
+        res, results, coils = optimization(
+            OUTPUT_DIR,
+            INPUT_FILE,
+            R1,
+            order,
+            ncoils,
+            UUID_init_from,
+            LENGTH_TARGET, 
+            LENGTH_WEIGHT,
+            CURVATURE_THRESHOLD, 
+            CURVATURE_WEIGHT,
+            MSC_THRESHOLD, 
+            MSC_WEIGHT,
+            CC_THRESHOLD,
+            CC_WEIGHT,
+            CS_THRESHOLD,
+            CS_WEIGHT,
+            FORCE_THRESHOLD,
+            FORCE_WEIGHT,
+            ARCLENGTH_WEIGHT,
+            MAXITER=MAXITER)
+        
+        print(f"Job {i+1} completed with UUID={results['UUID']}")
+
+
+def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
+                             OUTPUT_DIR="./output/QH/with-force-penalty/1/optimizations/"):
+    INPUT_FILE="./inputs/input.LandremanPaul2021_QH_magwell"
+    
+    """Performs a set of initial optimizations by scanning over parameters."""
+    for i in range(N):
         # FIXED PARAMETERS
         ARCLENGTH_WEIGHT        = 0.01
         UUID_init_from          = None  # not starting from prev. optimization
@@ -315,7 +373,6 @@ def optimization(
     BdotN       = np.mean(np.abs(np.sum(bs.B().reshape((nphi, ntheta, 3)) * s.unitnormal(), axis=2)))
     mean_AbsB   = np.mean(bs.AbsB())
     force       = [np.max(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
-
     results = {
         "nfp":                      nfp,
         "ncoils":                   int(ncoils),
