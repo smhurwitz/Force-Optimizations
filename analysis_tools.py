@@ -41,8 +41,8 @@ from simsopt.util import comm_world
 def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_DIR=None):
     """Returns DataFrames for the raw, filtered, and Pareto data."""
     ### STEP 1: Import raw data
-    inputs=f"{INPUT_DIR}*/results.json"
-    results = glob.glob(inputs)
+    inputs=f"{INPUT_DIR}**/results.json"
+    results = glob.glob(inputs, recursive=True)
     dfs = []
     for results_file in results:
         with open(results_file, "r") as f:
