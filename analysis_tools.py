@@ -121,13 +121,13 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
             df_correlation = df_correlation._append(df_row, ignore_index = True)
 
     if(matrix):
-        matrix = df_sorted.corr()
+        matrix = np.abs(df_sorted.corr())
         plt.figure(figsize=(9,9))
         plt.imshow(matrix, cmap='Blues')
         plt.title("Corrrelation Matrix")
         colorbar = plt.colorbar()
-        colorbar.set_label("Pearson's R")
-        plt.clim(-1, 1)
+        colorbar.set_label("|Pearson's R|")
+        plt.clim(0, 1)
         variables = []
         for i in matrix.columns:
             variables.append(i)

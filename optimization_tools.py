@@ -370,9 +370,11 @@ def optimization(
 
     # SAVE DATA TO JSON
 
-    BdotN       = np.mean(np.abs(np.sum(bs.B().reshape((nphi, ntheta, 3)) * s.unitnormal(), axis=2)))
-    mean_AbsB   = np.mean(bs.AbsB())
-    force       = [np.max(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
+    BdotN      = np.mean(np.abs(np.sum(bs.B().reshape((nphi, ntheta, 3)) * s.unitnormal(), axis=2)))
+    mean_AbsB  = np.mean(bs.AbsB())
+    max_forces = [np.max(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
+    min_forces = [np.min(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)) for c in base_coils]
+    RMS_forces = [np.sqrt(np.mean(np.square(np.linalg.norm(coil_force(c, coils, regularization_circ(0.05)), axis=1)))) for c in base_coils]
     results = {
         "nfp":                      nfp,
         "ncoils":                   int(ncoils),
@@ -405,8 +407,12 @@ def optimization(
         "max_max_κ":                max(np.max(c.kappa()) for c in base_curves),
         "MSCs":                     [float(J.J()) for J in Jmscs],
         "max_MSC":                  max(float(J.J()) for J in Jmscs),
-        "max_forces":               [float(f) for f in force],
-        "max_max_force":            max(float(f) for f in force),
+        "max_forces":               [float(f) for f in max_forces],
+        "max_max_force":            max(float(f) for f in max_forces),
+        "min_forces":               [float(f) for f in min_forces],
+        "min_min_force":            min(float(f) for f in min_forces),
+        "RMS_forces":               [float(f) for f in RMS_forces],
+        "mean_RMS_force":            np.mean(float(f) for f in RMS_forces),
         "arclength_variances":      [float(J.J()) for J in Jals],
         "max_arclength_variance":   max(float(J.J()) for J in Jals),
         "BdotN":                    BdotN,
