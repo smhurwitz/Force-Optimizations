@@ -93,7 +93,7 @@ def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_
     return df, df_filtered, df_pareto
 
 
-def parameter_correlations(df, sort_by='normalized_BdotN'):
+def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
     df_sorted = df.sort_values(by=[sort_by])
     columns_to_drop = ['BdotN', 'gradient_norm', 'Jf', 'JF', 'mean_AbsB',
                        'max_arclength_variance', 'iterations', 'linking_number',
@@ -101,7 +101,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
                        'R0', 'ntheta', 'nphi', 'ncoils', 'nfp','MSCs',
                        'max_forces', 'arclength_variances', 'max_κ',
                        'UUID_init', 'message', 'coil_currents', 'UUID',
-                       'lengths', 'eval_time', 'order']
+                       'lengths', 'eval_time', 'order', 'dx']
     df_sorted = df_sorted.drop(columns=columns_to_drop)
 
     df_correlation = pd.DataFrame({'Parameter': [], 'R': [], 'P': []})
@@ -120,6 +120,25 @@ def parameter_correlations(df, sort_by='normalized_BdotN'):
             df_row = {'Parameter': series_name, 'R': -np.inf, 'P': -np.inf}
             df_correlation = df_correlation._append(df_row, ignore_index = True)
 
+    if(matrix):
+        matrix = df_sorted.corr()
+        plt.figure(figsize=(9,9))
+        plt.imshow(matrix, cmap='Blues')
+        plt.title("Corrrelation Matrix")
+        colorbar = plt.colorbar()
+        colorbar.set_label("Pearson's R")
+        plt.clim(-1, 1)
+        variables = []
+        for i in matrix.columns:
+            variables.append(i)
+
+        # Adding labels to the matrix
+        plt.xticks(range(len(matrix)), variables, rotation=45, ha='right')
+        plt.yticks(range(len(matrix)), variables)
+
+        # Display the plot
+        plt.show()
+        
     return df_correlation.sort_values(by=['R'], ascending=False)
 
 
