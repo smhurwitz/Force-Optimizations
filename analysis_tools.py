@@ -101,7 +101,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
                        'R0', 'ntheta', 'nphi', 'ncoils', 'nfp','MSCs',
                        'max_forces', 'arclength_variances', 'max_κ',
                        'UUID_init', 'message', 'coil_currents', 'UUID',
-                       'lengths', 'eval_time', 'order', 'dx']
+                       'lengths', 'eval_time', 'order', 'dx', 'RMS_forces', 'min_forces']
     df_sorted = df_sorted.drop(columns=columns_to_drop)
 
     df_correlation = pd.DataFrame({'Parameter': [], 'R': [], 'P': []})
