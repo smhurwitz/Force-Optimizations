@@ -1,5 +1,5 @@
-# This file runs the fast particle tracing code SIMPLE in an embarassingly 
-# parallel scheme on a Slurm system.
+# This file runs the fast particle tracing code SIMPLE in embarassingly parallel
+# on a Slurm system.
 
 import os
 import subprocess
@@ -12,8 +12,9 @@ UUIDs = [f.name for f in os.scandir(PARETO_DIR) if f.is_dir()]
 for UUID in UUIDs:
     RUN_DIR = PARETO_DIR + UUID + "/"
 
-    python_contents = (f"sys.path.append('{CODE_DIR}')\n"
-                       "from analysis_tools import run_SIMPLE\n"
+    python_contents = (f"import sys\n"
+                       f"sys.path.append('{CODE_DIR}')\n"
+                       f"from analysis_tools import run_SIMPLE\n"
                        f"run_SIMPLE('{UUID}', RUN_DIR='{RUN_DIR}', BUILD_DIR='{BUILD_DIR}')")
 
     with open(RUN_DIR + "simple.py", "w") as file:
