@@ -85,7 +85,7 @@ def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_
             shutil.rmtree(OUTPUT_DIR)
         os.makedirs(OUTPUT_DIR, exist_ok=True)
         for UUID in df_pareto['UUID']:
-            SOURCE_DIR = glob.glob(f"./**/{UUID}/", recursive=True)[0] 
+            SOURCE_DIR = glob.glob(f"/**/{UUID}/", recursive=True)[0] 
             DEST_DIR = f"{OUTPUT_DIR}{UUID}/"
             shutil.copytree(SOURCE_DIR, DEST_DIR)
 
@@ -379,7 +379,7 @@ def poincare(UUID, OUT_DIR='./output/QA/with-force-penalty/1/poincare/',
     nfp = surf.nfp
 
     # Load in the optimized coils from stage_two_optimization.py:
-    coils_filename = glob.glob(f"./**/{UUID}/biot_savart.json", recursive=True)[0] 
+    coils_filename = glob.glob(f"/**/{UUID}/biot_savart.json", recursive=True)[0] 
     bs = simsopt.load(coils_filename)
 
     sc_fieldline = SurfaceClassifier(surf, h=0.03, p=2)
@@ -441,7 +441,7 @@ def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=1.00):
     s = SurfaceRZFourier.from_vmec_input(INPUT_FILE, range="full torus", nphi=32, ntheta=32)
     
     # Optimize at fixed volume:
-    path = glob.glob("./**/" + UUID + "/biot_savart.json", recursive=True)[0]
+    path = glob.glob("/**/" + UUID + "/biot_savart.json", recursive=True)[0]
     bs = load(path)
     qfm = QfmResidual(s, bs)
     qfm.J()
@@ -473,7 +473,7 @@ def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_sca
         f.write(f"/\n")
 
     # STEP 2: move the vmec equil to the run dir
-    SOURCE = glob.glob(f"./**/{UUID}/eq_scaled.nc", recursive=True)[0]
+    SOURCE = glob.glob(f"/**/{UUID}/eq_scaled.nc", recursive=True)[0]
     DEST = RUN_DIR + "eq_scaled.nc"
     shutil.copy(SOURCE, DEST)
 
@@ -486,7 +486,7 @@ def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_sca
         subprocess.run(command, shell=True, check=True)
 
     # STEP 4: move inputs and outputs to UUID's folder
-    DEST = glob.glob(f"./**/{UUID}/", recursive=True)[0]
+    DEST = glob.glob(f"/**/{UUID}/", recursive=True)[0]
     files = ["simple.in", "times_lost.dat", vmec_name]
     for file in files:
         os.remove(RUN_DIR + file) 

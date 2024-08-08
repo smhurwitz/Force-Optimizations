@@ -1,4 +1,6 @@
 import sys
+# sys.path.append("/global/homes/s/shurwitz/Force-Optimizations/" )
+
 from analysis_tools import *
 
 iteration = int(sys.argv[1])

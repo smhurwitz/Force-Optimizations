@@ -27,6 +27,9 @@ for UUID in UUIDs:
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks-per-node=1\n"
                     "#SBATCH --cpus-per-task=1\n"
+                    # "#SBATCH --mail-type=END\n"
+                    # "#SBATCH --mail-user=shurwitz@umd.edu\n"
+                   f'#SBATCH --job-name="SIMPLE_{UUID}"\n'
                     "srun python simple.py")
 
     with open(RUN_DIR + "simple.sh", "w") as file:
