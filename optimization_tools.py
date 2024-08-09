@@ -24,7 +24,8 @@ from simsopt.field.force import coil_force, LpCurveForce
 from simsopt.field.selffield import regularization_circ
 
 
-def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/pareto/", 
+def continuation(N=10000, dx=0.05, 
+                 INPUT_DIR="./output/QA/with-force-penalty/1/pareto/", 
                  OUTPUT_DIR="./output/QA/with-force-penalty/2/optimizations/",
                  INPUT_FILE="./inputs/input.LandremanPaul2021_QA",
                  MAXITER=14000):
@@ -97,9 +98,9 @@ def continuation(N=10000, dx=0.05, INPUT_DIR="./output/QA/with-force-penalty/1/p
         print(f"Job {i+1} completed with UUID={results['UUID']}")
             
 
-def initial_optimizations_QA(N=10000, with_force=True, MAXITER=14000,
-                             OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/"):
-    INPUT_FILE="./inputs/input.LandremanPaul2021_QA"
+def initial_optimizations(N=10000, with_force=True, MAXITER=14000,
+                         OUTPUT_DIR="./output/QA/with-force-penalty/1/optimizations/",
+                         INPUT_FILE="./inputs/input.LandremanPaul2021_QA"):
     
     """Performs a set of initial optimizations by scanning over parameters."""
     for i in range(N):
@@ -116,64 +117,6 @@ def initial_optimizations_QA(N=10000, with_force=True, MAXITER=14000,
         CS_THRESHOLD            = rand(0.166, 0.300)
         CC_THRESHOLD            = rand(0.083, 0.120)
         FORCE_THRESHOLD         = rand(0, 5e+04)
-        LENGTH_TARGET           = rand(4.9,5.0)
-
-        LENGTH_WEIGHT           = 10.0 ** rand(-4, -2)
-        CURVATURE_WEIGHT        = 10.0 ** rand(-9, -5)
-        MSC_WEIGHT              = 10.0 ** rand(-7, -3)
-        CS_WEIGHT               = 10.0 ** rand(-1, 4)
-        CC_WEIGHT               = 10.0 ** rand(2, 5)
-
-        if with_force:
-            FORCE_WEIGHT        = 10.0 ** rand(-14, -9)
-        else:
-            FORCE_WEIGHT        = 0
-
-        # RUNNING THE JOBS
-        res, results, coils = optimization(
-            OUTPUT_DIR,
-            INPUT_FILE,
-            R1,
-            order,
-            ncoils,
-            UUID_init_from,
-            LENGTH_TARGET, 
-            LENGTH_WEIGHT,
-            CURVATURE_THRESHOLD, 
-            CURVATURE_WEIGHT,
-            MSC_THRESHOLD, 
-            MSC_WEIGHT,
-            CC_THRESHOLD,
-            CC_WEIGHT,
-            CS_THRESHOLD,
-            CS_WEIGHT,
-            FORCE_THRESHOLD,
-            FORCE_WEIGHT,
-            ARCLENGTH_WEIGHT,
-            MAXITER=MAXITER)
-        
-        print(f"Job {i+1} completed with UUID={results['UUID']}")
-
-
-def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
-                             OUTPUT_DIR="./output/QH/with-force-penalty/1/optimizations/"):
-    INPUT_FILE="./inputs/input.LandremanPaul2021_QH_magwell"
-    
-    """Performs a set of initial optimizations by scanning over parameters."""
-    for i in range(N):
-        # FIXED PARAMETERS
-        ARCLENGTH_WEIGHT        = 0.01
-        UUID_init_from          = None  # not starting from prev. optimization
-        order                   = 16
-        ncoils                  = 5
-
-        # RANDOM PARAMETERS
-        R1                      = rand(0.35, 0.75)
-        CURVATURE_THRESHOLD     = rand(5, 12)
-        MSC_THRESHOLD           = rand(4,6)
-        CS_THRESHOLD            = rand(0.080, 0.300)
-        CC_THRESHOLD            = rand(0.083, 0.120)
-        FORCE_THRESHOLD         = rand(0, 10e+04)
         LENGTH_TARGET           = rand(4.9,5.0)
 
         LENGTH_WEIGHT           = 10.0 ** rand(-4, -2)
@@ -292,6 +235,7 @@ def optimization(
         bs.set_points(s.gamma().reshape((-1, 3)))
     else: 
         path = glob.glob(f"./**/{UUID_init_from}/biot_savart.json", recursive=True)[0]
+        print("2")
         bs = load(path)
         coils = bs.coils
         curves = [c.curve for c in coils]
@@ -300,7 +244,6 @@ def optimization(
         base_currents = [base_coils[i].current for i in range(ncoils)]
         bs.set_points(s.gamma().reshape((-1, 3)))
 
-    
     ###########################################################################
     ## FORM THE OBJECTIVE FUNCTION ############################################
 
@@ -413,7 +356,6 @@ def optimization(
         "min_min_force":            min(float(f) for f in min_forces),
         "RMS_forces":               [float(f) for f in RMS_forces],
         "mean_RMS_force":            float(np.mean([f for f in RMS_forces])),
-        # "mean_RMS_force":            np.mean(float(f) for f in RMS_forces),
         "arclength_variances":      [float(J.J()) for J in Jals],
         "max_arclength_variance":   max(float(J.J()) for J in Jals),
         "BdotN":                    BdotN,
