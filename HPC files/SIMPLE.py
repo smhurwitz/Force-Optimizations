@@ -22,13 +22,14 @@ for UUID in UUIDs:
 
     slurm_contents = ("#!/bin/bash\n"
                     "#SBATCH --qos=regular\n"
-                    "#SBATCH --time=300\n"
+                    # "#SBATCH --time=600\n"
                     "#SBATCH --constraint cpu\n"
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks-per-node=1\n"
-                    "#SBATCH --cpus-per-task=1\n"
-                    # "#SBATCH --mail-type=END\n"
-                    # "#SBATCH --mail-user=shurwitz@umd.edu\n"
+                    "#SBATCH --ntasks-per-core=2\n"
+                    "#SBATCH --cpus-per-task=144\n"
+                    "#SBATCH --mail-type=END\n"
+                    "#SBATCH --mail-user=shurwitz@umd.edu\n"
                    f'#SBATCH --job-name="SIMPLE_{UUID}"\n'
                     "srun python simple.py")
 

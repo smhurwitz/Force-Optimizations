@@ -171,9 +171,9 @@ def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
         R1                      = rand(0.35, 0.75)
         CURVATURE_THRESHOLD     = rand(5, 12)
         MSC_THRESHOLD           = rand(4,6)
-        CS_THRESHOLD            = rand(0.166, 0.300)
+        CS_THRESHOLD            = rand(0.080, 0.300)
         CC_THRESHOLD            = rand(0.083, 0.120)
-        FORCE_THRESHOLD         = rand(0, 5e+04)
+        FORCE_THRESHOLD         = rand(0, 10e+04)
         LENGTH_TARGET           = rand(4.9,5.0)
 
         LENGTH_WEIGHT           = 10.0 ** rand(-4, -2)
@@ -400,7 +400,7 @@ def optimization(
         "JF":                       float(JF.J()),
         "Jf":                       float(Jf.J()),
         "gradient_norm":            np.linalg.norm(JF.dJ()),
-        "linking_number":           LinkingNumber(curves).J(),
+        # "linking_number":           LinkingNumber(curves).J(), #TODO: UNCOMMENT!!!!!!!
         "lengths":                  [float(J.J()) for J in Jls],
         "max_length":               max(float(J.J()) for J in Jls),
         "max_κ":                    [np.max(c.kappa()) for c in base_curves],
@@ -412,7 +412,8 @@ def optimization(
         "min_forces":               [float(f) for f in min_forces],
         "min_min_force":            min(float(f) for f in min_forces),
         "RMS_forces":               [float(f) for f in RMS_forces],
-        "mean_RMS_force":            np.mean(float(f) for f in RMS_forces),
+        "mean_RMS_force":            float(np.mean([f for f in RMS_forces])),
+        # "mean_RMS_force":            np.mean(float(f) for f in RMS_forces),
         "arclength_variances":      [float(J.J()) for J in Jals],
         "max_arclength_variance":   max(float(J.J()) for J in Jals),
         "BdotN":                    BdotN,

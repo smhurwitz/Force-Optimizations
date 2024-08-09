@@ -104,21 +104,21 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
                        'lengths', 'eval_time', 'order', 'dx', 'RMS_forces', 'min_forces']
     df_sorted = df_sorted.drop(columns=columns_to_drop)
 
-    df_correlation = pd.DataFrame({'Parameter': [], 'R': [], 'P': []})
+    df_correlation = pd.DataFrame({'Parameter': [], 'R^2': [], 'P': [], 'Equation': []})
     for i in range(len(df_sorted.columns)):
         series_name = df_sorted.columns[i]
-        series = np.array(df_sorted)[:, i]
+        series = (np.array(df_sorted)[:, i]).astype(float)
         bdotn_series = np.array(df_sorted[sort_by])
-        if isinstance(series[0], Number):
-            series = series.astype(float)
-            result = scipy.stats.linregress(bdotn_series, series)
-            r = result.rvalue
-            p = result.pvalue
-            df_row = {'Parameter': series_name, 'R': r, 'P': p}
-            df_correlation = df_correlation._append(df_row, ignore_index = True)
-        else: 
-            df_row = {'Parameter': series_name, 'R': -np.inf, 'P': -np.inf}
-            df_correlation = df_correlation._append(df_row, ignore_index = True)
+        result = scipy.stats.linregress(bdotn_series, series)
+
+        r         = result.rvalue**2
+        p         = result.pvalue
+        slope     = result.slope
+        intercept = result.intercept
+        equation  = f"y = {slope:.2e} * x + {intercept:.2e}"  
+
+        df_row = {'Parameter': series_name, 'R^2': r, 'P': p, 'Equation': equation}
+        df_correlation = df_correlation._append(df_row, ignore_index = True)
 
     if(matrix):
         matrix = np.abs(df_sorted.corr())
@@ -126,7 +126,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
         plt.imshow(matrix, cmap='Blues')
         plt.title("Corrrelation Matrix")
         colorbar = plt.colorbar()
-        colorbar.set_label("|Pearson's R|")
+        colorbar.set_label(r"$R^2$")
         plt.clim(0, 1)
         variables = []
         for i in matrix.columns:
@@ -139,7 +139,7 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
         # Display the plot
         plt.show()
         
-    return df_correlation.sort_values(by=['R'], ascending=False)
+    return df_correlation.sort_values(by=['R^2'], ascending=False)
 
 
 
@@ -347,7 +347,7 @@ def success_plt(df, df_filtered):
         ("cc_weight", True),
         ("cs_weight", True),
         ("force_weight", True),
-        ("linking_number", False),
+        # ("linking_number", False), # TODO: uncomment later
         ('ncoils', False)
     )
 
