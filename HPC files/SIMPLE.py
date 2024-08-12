@@ -15,7 +15,7 @@ for UUID in UUIDs:
     python_contents = (f"import sys\n"
                        f"sys.path.append('{CODE_DIR}')\n"
                        f"from analysis_tools import run_SIMPLE\n"
-                       f"run_SIMPLE('{UUID}', BUILD_DIR='{BUILD_DIR}')")
+                       f"run_SIMPLE('{UUID}', BUILD_DIR='{BUILD_DIR}', trace_time=2e-1, n_test_part=5000)")
 
     with open(RUN_DIR + "simple.py", "w") as file:
         file.write(python_contents)
@@ -27,7 +27,7 @@ for UUID in UUIDs:
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks-per-node=1\n"
                     "#SBATCH --ntasks-per-core=2\n"
-                    "#SBATCH --cpus-per-task=144\n"
+                    # "#SBATCH --cpus-per-task=144\n"
                     "#SBATCH --mail-type=END\n"
                     "#SBATCH --mail-user=shurwitz@umd.edu\n"
                    f'#SBATCH --job-name="SIMPLE_{UUID}"\n'

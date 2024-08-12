@@ -463,7 +463,7 @@ def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_sca
                suppress_output=False):
 
     # STEP 1: generate the input files and save to the run directory
-    RUN_DIR = glob.glob(f"../**/{UUID}/eq_scaled.nc", recursive=True)[0]
+    RUN_DIR = glob.glob(f"../**/{UUID}/", recursive=True)[0]
     with open(RUN_DIR + "simple.in", "w") as f: 
         f.write(f"&config\n")
         f.write(f"trace_time = {trace_time}d0\n")
