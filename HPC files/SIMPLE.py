@@ -15,14 +15,14 @@ for UUID in UUIDs:
     python_contents = (f"import sys\n"
                        f"sys.path.append('{CODE_DIR}')\n"
                        f"from analysis_tools import run_SIMPLE\n"
-                       f"run_SIMPLE('{UUID}', RUN_DIR='{RUN_DIR}', BUILD_DIR='{BUILD_DIR}')")
+                       f"run_SIMPLE('{UUID}', BUILD_DIR='{BUILD_DIR}')")
 
     with open(RUN_DIR + "simple.py", "w") as file:
         file.write(python_contents)
 
     slurm_contents = ("#!/bin/bash\n"
                     "#SBATCH --qos=regular\n"
-                    # "#SBATCH --time=600\n"
+                    "#SBATCH --time=1440\n"
                     "#SBATCH --constraint cpu\n"
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks-per-node=1\n"

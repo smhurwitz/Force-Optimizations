@@ -460,10 +460,10 @@ def qfm(UUID, INPUT_FILE="./inputs/input.LandremanPaul2021_QA", vol_frac=1.00):
 
 def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_scaled.nc", 
                BUILD_DIR="/Users/sienahurwitz/Documents/Physics/Codes/SIMPLE/build/",
-               RUN_DIR="/Users/sienahurwitz/Documents/Physics/Codes/SIMPLE/build/",
                suppress_output=False):
 
-    # STEP 1: generate the input files and save to run dir
+    # STEP 1: generate the input files and save to the run directory
+    RUN_DIR = glob.glob(f"../**/{UUID}/eq_scaled.nc", recursive=True)[0]
     with open(RUN_DIR + "simple.in", "w") as f: 
         f.write(f"&config\n")
         f.write(f"trace_time = {trace_time}d0\n")
@@ -472,26 +472,17 @@ def run_SIMPLE(UUID, trace_time=1e-1, s=0.3, n_test_part=1024, vmec_name="eq_sca
         f.write(f"netcdffile = '{vmec_name}'\n")
         f.write(f"/\n")
 
-    # STEP 2: move the vmec equil to the run dir
-    SOURCE = glob.glob(f"/**/{UUID}/eq_scaled.nc", recursive=True)[0]
-    DEST = RUN_DIR + "eq_scaled.nc"
-    shutil.copy(SOURCE, DEST)
-
-    # STEP 3: run SIMPLE   
-    # command = f"cd {BUILD_DIR} && ./simple.x"
+    # STEP 2: run SIMPLE
     command = BUILD_DIR + "simple.x"
     if suppress_output:
         subprocess.run(command, shell=True, check=True, stdout=subprocess.DEVNULL) 
     else: 
         subprocess.run(command, shell=True, check=True)
 
-    # STEP 4: move inputs and outputs to UUID's folder
-    DEST = glob.glob(f"/**/{UUID}/", recursive=True)[0]
+    # STEP 3: delete irrelevant files
     files = ["simple.in", "times_lost.dat", vmec_name]
     for file in files:
         os.remove(RUN_DIR + file) 
-    shutil.move(RUN_DIR + "confined_fraction.dat", 
-                DEST +f"confined_fraction_s={s:.1E}.dat")  
 
 
 def surf_to_desc(simsopt_surf, LMN=8):
