@@ -27,7 +27,7 @@ for UUID in UUIDs:
                     "#SBATCH --nodes=1\n"
                     "#SBATCH --ntasks-per-node=1\n"
                     "#SBATCH --ntasks-per-core=2\n"
-                    # "#SBATCH --cpus-per-task=144\n"
+                    "#SBATCH --cpus-per-task=4\n"
                     "#SBATCH --mail-type=END\n"
                     "#SBATCH --mail-user=shurwitz@umd.edu\n"
                    f'#SBATCH --job-name="SIMPLE_{UUID}"\n'

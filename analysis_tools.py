@@ -301,7 +301,7 @@ def plot_losses(INPUT_PATH, s=0.3):
     plt.xscale('log')
     plt.xlabel("time [s]")
     plt.ylabel("loss fraction")
-    return fig
+    return fig, time, loss_frac
 
     
 def success_plt(df, df_filtered):
@@ -364,7 +364,6 @@ def success_plt(df, df_filtered):
 ###############################################################################
 # III) PHYSICS STUFF
 ###############################################################################
-
 def poincare(UUID, OUT_DIR='./output/QA/with-force-penalty/1/poincare/', 
              INPUT_FILE="./inputs/input.LandremanPaul2021_QA", phis=[0.0],
              nfieldlines=10, tmax_fl=20000, degree=4, R0_min=1.2125346, 
@@ -372,7 +371,7 @@ def poincare(UUID, OUT_DIR='./output/QA/with-force-penalty/1/poincare/',
     """Compute Poincare plots."""
  
     # Directory for output
-    os.makedirs(OUT_DIR, exist_ok=True)
+    if debug: os.makedirs(OUT_DIR, exist_ok=True)
 
     # Load in the boundary surface:
     surf = SurfaceRZFourier.from_vmec_input(INPUT_FILE, nphi=200, ntheta=30, range="full torus")
