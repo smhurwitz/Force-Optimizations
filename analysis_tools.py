@@ -2,6 +2,7 @@ import desc
 import glob
 import imageio
 import json
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -93,15 +94,17 @@ def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_
     return df, df_filtered, df_pareto
 
 
-def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False):
+def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False, columns_to_drop=None, fontsize=10):
+    matplotlib.rcParams.update({'font.size': fontsize})
     df_sorted = df.sort_values(by=[sort_by])
-    columns_to_drop = ['BdotN', 'gradient_norm', 'Jf', 'JF', 'mean_AbsB',
-                       'max_arclength_variance', 'iterations', 'linking_number',
-                       'function_evaluations', 'success', 'arclength_weight',
-                       'R0', 'ntheta', 'nphi', 'ncoils', 'nfp','MSCs',
-                       'max_forces', 'arclength_variances', 'max_κ',
-                       'UUID_init', 'message', 'coil_currents', 'UUID',
-                       'lengths', 'eval_time', 'order', 'dx', 'RMS_forces', 'min_forces']
+    if columns_to_drop is None:
+        columns_to_drop = ['BdotN', 'gradient_norm', 'Jf', 'JF', 'mean_AbsB',
+                        'max_arclength_variance', 'iterations', 'linking_number',
+                        'function_evaluations', 'success', 'arclength_weight',
+                        'R0', 'ntheta', 'nphi', 'ncoils', 'nfp','MSCs',
+                        'max_forces', 'arclength_variances', 'max_κ',
+                        'UUID_init', 'message', 'coil_currents', 'UUID',
+                        'lengths', 'eval_time', 'order', 'dx', 'RMS_forces', 'min_forces']
     df_sorted = df_sorted.drop(columns=columns_to_drop)
 
     df_correlation = pd.DataFrame({'Parameter': [], 'R^2': [], 'P': [], 'Equation': []})
@@ -276,7 +279,7 @@ def plot_coils(BS_PATH, fig=None, surf_file=None, surf_color="white", coil_color
         rgb = colors.to_rgba(surf_color)[0:3]
         mlab.mesh(gamma[:, :, 0], gamma[:, :, 1], gamma[:, :, 2], color=rgb)
 
-    mlab.colorbar(orientation="vertical", title="Force [N/m]")
+    cb = mlab.colorbar(orientation="vertical", title="Force [N/m]")
     mlab.axes(x_axis_visibility=False, y_axis_visibility=False, z_axis_visibility=False)
     fig.scene.camera.zoom(1.65)
     fig.scene.disable_render = False
