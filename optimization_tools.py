@@ -169,7 +169,7 @@ def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
         order                   = 16
 
         # RANDOM PARAMETERS
-        R1                      = rand(0.35, 0.75)
+        R1                      = rand(0.35, 0.6)
         CURVATURE_THRESHOLD     = rand(5, 12)
         MSC_THRESHOLD           = rand(4,6)
         CS_THRESHOLD            = rand(0.166, 0.300)
@@ -177,14 +177,14 @@ def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
         FORCE_THRESHOLD         = rand(0, 5e+04)
         LENGTH_TARGET           = rand(4.9,5.0)
 
-        LENGTH_WEIGHT           = 10.0 ** rand(-3, -1)
-        CURVATURE_WEIGHT        = 10.0 ** rand(-9, -5)
-        MSC_WEIGHT              = 10.0 ** rand(-5, -1)
-        CS_WEIGHT               = 10.0 ** rand(-1, 4)
-        CC_WEIGHT               = 10.0 ** rand(2, 5)
+        LENGTH_WEIGHT           = 10.0 ** rand(-7, -5)
+        CURVATURE_WEIGHT        = 10.0 ** rand(-14, -10)
+        MSC_WEIGHT              = 10.0 ** rand(-8, -5)
+        CS_WEIGHT               = 10.0 ** rand(-4, 1)
+        CC_WEIGHT               = 10.0 ** rand(-3, 0)
 
         if with_force:
-            FORCE_WEIGHT        = 10.0 ** rand(-14, -9)
+            FORCE_WEIGHT        = 10.0 ** rand(-18, -11)
         else:
             FORCE_WEIGHT        = 0
 

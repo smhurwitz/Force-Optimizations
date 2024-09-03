@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import plotly.express as px
 import scipy
+import seaborn as sns
 import shutil
 import simsopt
 import subprocess
@@ -94,7 +95,7 @@ def get_dfs(INPUT_DIR='./output/QA/with-force-penalty/1/optimizations/', OUTPUT_
     return df, df_filtered, df_pareto
 
 
-def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False, columns_to_drop=None, fontsize=10):
+def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False, columns_to_drop=None, fontsize=10, annot=True):
     matplotlib.rcParams.update({'font.size': fontsize})
     df_sorted = df.sort_values(by=[sort_by])
     if columns_to_drop is None:
@@ -124,22 +125,12 @@ def parameter_correlations(df, sort_by='normalized_BdotN', matrix=False, columns
         df_correlation = df_correlation._append(df_row, ignore_index = True)
 
     if(matrix):
-        matrix = np.abs(df_sorted.corr())
         plt.figure(figsize=(9,9))
-        plt.imshow(matrix, cmap='Blues')
+        matrix = np.abs(df_sorted.corr())
+        matrix = np.round(matrix,2)
+        ax = sns.heatmap(matrix, cmap="Blues",annot=annot, cbar_kws={'label': r'$R^2$'})
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
         plt.title("Corrrelation Matrix")
-        colorbar = plt.colorbar()
-        colorbar.set_label(r"$R^2$")
-        plt.clim(0, 1)
-        variables = []
-        for i in matrix.columns:
-            variables.append(i)
-
-        # Adding labels to the matrix
-        plt.xticks(range(len(matrix)), variables, rotation=45, ha='right')
-        plt.yticks(range(len(matrix)), variables)
-
-        # Display the plot
         plt.show()
         
     return df_correlation.sort_values(by=['R^2'], ascending=False)
