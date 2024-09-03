@@ -178,13 +178,13 @@ def initial_optimizations_QH(N=10000, with_force=True, MAXITER=14000,
         LENGTH_TARGET           = rand(4.9,5.0)
 
         LENGTH_WEIGHT           = 10.0 ** rand(-7, -5)
-        CURVATURE_WEIGHT        = 10.0 ** rand(-14, -10)
+        CURVATURE_WEIGHT        = 10.0 ** rand(-15, -11)
         MSC_WEIGHT              = 10.0 ** rand(-8, -5)
-        CS_WEIGHT               = 10.0 ** rand(-4, 1)
+        CS_WEIGHT               = 10.0 ** rand(-5, 0)
         CC_WEIGHT               = 10.0 ** rand(-3, 0)
 
         if with_force:
-            FORCE_WEIGHT        = 10.0 ** rand(-18, -11)
+            FORCE_WEIGHT        = 10.0 ** rand(-19, -12)
         else:
             FORCE_WEIGHT        = 0
 
