@@ -1,0 +1,1 @@
+This repository encompasses the input files and code used for the analysis in my Lorentz force optimization project associated with the paper 'Electromagnetic coil optimization for reduced Lorentz forces'. A more complete version including the set of output files is found at https://doi.org/10.5281/zenodo.13913510.  
